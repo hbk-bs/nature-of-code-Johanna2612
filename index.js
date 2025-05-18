@@ -8,26 +8,27 @@ let numParticles = 1500; // Erhöhe die Anzahl der Partikel für einen dichteren
 let turbulenceFactor = 0.1; // Stärke der Turbulenzen
 let lineLength = 40; // Länge der Striche
 
-// Silhouette-Parameter
-let silhouetteHeight = 100;
-let silhouetteWidth = 50;
-let silhouetteX; // Wird später berechnet
-let silhouetteY; // Wird später berechnet
-let silhouetteColor = 0; // Startfarbe: Schwarz
+// Ball-Parameter
+let ballDiameter = 100;
+let ballX; // Wird später berechnet
+let ballY; // Wird später berechnet
+let ballColor = 0; // Startfarbe: Schwarz
 let collisionTime = -1; // Zeitpunkt der ersten Kollision (-1 bedeutet keine Kollision)
-const transitionDuration = 4000; // Dauer des gesamten Übergangs in Millisekunden
+const transitionDuration = 5000; // Dauer des gesamten Übergangs in Millisekunden
 const midColor = 150; // Mittlere Farbe: Grau
-const targetColor = 220; // Ziel-Hellgrau-Wert
+const targetColor = 225; // Ziel-Hellgrau-Wert
+let baseDistortionAmount = 1; // Startstärke der Verzerrung
+let targetDistortionAmount = 7; // Zielstärke der Verzerrung
+let distortionDetail = 10; // Feinheit der Verzerrung
+let isDistorting = false; // Zustand, ob die Verzerrung aktiv ist
 
 function setup() {
   createCanvas(600, 600);
   noStroke();
 
-  // Berechnung der horizontalen Position (Mitte)
-  silhouetteX = width / 2 - silhouetteWidth / 2;
-
-  // Berechnung der vertikalen Position (unteres Drittel)
-  silhouetteY = height * (2 / 3) - silhouetteHeight / 2;
+  // Berechnung der horizontalen Position (Mitte unten)
+  ballX = width / 2;
+  ballY = height * (2 / 3) + ballDiameter / 2; // Mittig unten
 
   for (let i = 0; i < numParticles; i++) {
     let y = random(height);
@@ -59,19 +60,13 @@ function setup() {
 function draw() {
   background(255, 10);
 
-  // Deaktiviere die Umrandung für das Rechteck
-  noStroke();
-
-  // Zeichne die Silhouette im Hintergrund
-  fill(silhouetteColor, 150);
-  rect(silhouetteX, silhouetteY, silhouetteWidth, silhouetteHeight);
-
   let collisionDetected = false;
+  let ballRadius = ballDiameter / 2;
   for (let i = 0; i < particles.length; i++) {
     let p = particles[i];
-    // Überprüfe auf Überlappung
-    if (p.x > silhouetteX && p.x < silhouetteX + silhouetteWidth &&
-        p.y > silhouetteY && p.y < silhouetteY + silhouetteHeight) {
+    // Überprüfe auf Überlappung mit dem Ball
+    let distance = dist(p.x, p.y, ballX, ballY);
+    if (distance < ballRadius) {
       collisionDetected = true;
       break; // Wir haben die erste Überlappung gefunden
     }
@@ -80,6 +75,30 @@ function draw() {
   // Wenn die erste Kollision erkannt wurde
   if (collisionDetected && collisionTime === -1) {
     collisionTime = millis(); // Speichere den Zeitpunkt der Kollision
+    isDistorting = true; // Aktiviere die Verzerrung
+  }
+
+  let currentDistortionAmount = 0;
+  if (isDistorting && collisionTime !== -1) {
+    let elapsedTime = millis() - collisionTime;
+    let normalizedTime = constrain(elapsedTime / transitionDuration, 0, 1); // Wert zwischen 0 und 1
+    currentDistortionAmount = lerp(baseDistortionAmount, targetDistortionAmount, normalizedTime);
+  }
+
+  // Zeichne den Ball mit oder ohne Verzerrung
+  noStroke();
+  if (isDistorting && currentDistortionAmount > 0) {
+    fill(ballColor, 15); // Niedrige Transparenz für die einzelnen Verzerrungen
+    for (let i = 0; i < distortionDetail; i++) {
+      let offsetX = random(-currentDistortionAmount, currentDistortionAmount);
+      let offsetY = random(-currentDistortionAmount, currentDistortionAmount);
+      circle(ballX + offsetX, ballY + offsetY, ballDiameter);
+    }
+    fill(ballColor, 150); // Zeichne den Hauptball darüber
+    circle(ballX, ballY, ballDiameter);
+  } else {
+    fill(ballColor, 150); // Zeichne den normalen Ball, wenn keine Verzerrung aktiv ist
+    circle(ballX, ballY, ballDiameter);
   }
 
   // Berechne die aktuelle Farbe basierend auf der verstrichenen Zeit
@@ -89,18 +108,17 @@ function draw() {
 
     if (normalizedTime < 0.5) {
       // Erste Hälfte der Zeit: von Schwarz zu Grau
-      silhouetteColor = lerp(0, midColor, normalizedTime * 2); // *2, da wir nur die halbe Zeit nutzen
+      ballColor = lerp(0, midColor, normalizedTime * 2); // *2, da wir nur die halbe Zeit nutzen
     } else {
       // Zweite Hälfte der Zeit: von Grau zu Hellgrau
-      silhouetteColor = lerp(midColor, targetColor, (normalizedTime - 0.5) * 2); // *(normalizedTime - 0.5) und dann *2
+      ballColor = lerp(midColor, targetColor, (normalizedTime - 0.5) * 2); // *(normalizedTime - 0.5) und dann *2
     }
   }
 
-  // Aktiviere die Umrandung für die Partikel
   stroke(0);
   strokeWeight(6);
 
-  // Zeichne die Partikel über der Silhouette
+  // Zeichne die Partikel über dem Ball
   for (let i = 0; i < particles.length; i++) {
     let p = particles[i];
     stroke(p.y / 10, p.alpha);
