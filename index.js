@@ -1,25 +1,39 @@
-
-
 let particles = []; // Ein Array für alle Partikel
 
-let baseSpeedTop = 1;
-let baseSpeedMiddle = 0.75;
-let baseSpeedBottom = 0.5;
+let baseSpeedTop = 0.75;
+let baseSpeedMiddle = 0.5;
+let baseSpeedBottom = 0.25;
 
-let numParticles = 1400; // Erhöhe die Anzahl der Partikel für einen dichteren Effekt
+let numParticles = 1500; // Erhöhe die Anzahl der Partikel für einen dichteren Effekt
 let turbulenceFactor = 0.1; // Stärke der Turbulenzen
+let lineLength = 40; // Länge der Striche
+
+// Silhouette-Parameter
+let silhouetteHeight = 100;
+let silhouetteWidth = 50;
+let silhouetteX; // Wird später berechnet
+let silhouetteY; // Wird später berechnet
+let silhouetteColor = 0; // Startfarbe: Schwarz
+let collisionTime = -1; // Zeitpunkt der ersten Kollision (-1 bedeutet keine Kollision)
+const transitionDuration = 4000; // Dauer des gesamten Übergangs in Millisekunden
+const midColor = 150; // Mittlere Farbe: Grau
+const targetColor = 220; // Ziel-Hellgrau-Wert
 
 function setup() {
   createCanvas(600, 600);
   noStroke();
 
+  // Berechnung der horizontalen Position (Mitte)
+  silhouetteX = width / 2 - silhouetteWidth / 2;
+
+  // Berechnung der vertikalen Position (unteres Drittel)
+  silhouetteY = height * (2 / 3) - silhouetteHeight / 2;
+
   for (let i = 0; i < numParticles; i++) {
     let y = random(height);
     let speed;
-    let alphaValue = random(1, 4);
-    let sizeValue = random(1, 2);
+    let alphaValue = random(1, 3);
 
-    // Sanfter Übergang der Geschwindigkeit basierend auf der y-Position
     if (y < height / 3) {
       speed = lerp(baseSpeedTop, baseSpeedMiddle, y / (height / 3));
     } else if (y < 2 * height / 3) {
@@ -28,46 +42,77 @@ function setup() {
       speed = baseSpeedBottom;
     }
 
-    // Beeinflusse die Wahrscheinlichkeit der Partikelverteilung
-    let densityFactor = map(y, 0, height, 1, 0.3); // Linearer Abfall der Dichte von oben nach unten
+    let densityFactor = map(y, 0, height, 1, 0.3);
     if (random(1) < densityFactor) {
       particles.push({
         x: random(width) - width,
         y: y,
-        size: 2.5 + random(5, 20),
         alpha: alphaValue,
         speed: speed,
-        yVelocity: 0 // Starte mit einer vertikalen Geschwindigkeit von Null
+        yVelocity: 0
       });
     }
   }
-  console.log("Anzahl der Partikel:", particles.length); // Gib die tatsächliche Anzahl der erzeugten Partikel aus
+  console.log("Anzahl der Partikel:", particles.length);
 }
 
 function draw() {
-  background(255, 10); // Weißer Hintergrund bleibt
+  background(255, 10);
 
-  fill(0); // Graue Farbe für alle Partikel
+  // Deaktiviere die Umrandung für das Rechteck
+  noStroke();
+
+  // Zeichne die Silhouette im Hintergrund
+  fill(silhouetteColor, 150);
+  rect(silhouetteX, silhouetteY, silhouetteWidth, silhouetteHeight);
+
+  let collisionDetected = false;
   for (let i = 0; i < particles.length; i++) {
     let p = particles[i];
-    fill(p.y / 10, p.alpha); // Verwende die individuelle Alpha-Komponente
-    ellipse(p.x, p.y, p.size, p.size);
-    p.x += p.speed + noise(p.x * 0.1, frameCount * 0.01) * 0.5; // Füge Rauschen für subtile horizontale Variation hinzu
-    p.yVelocity += random(-turbulenceFactor, turbulenceFactor); // Zufällige vertikale Beschleunigung (Turbulenz)
-    p.y += p.yVelocity; // Anwenden der vertikalen Geschwindigkeit
-    p.yVelocity *= 0.85; // Langsames Abbremsen der vertikalen Geschwindigkeit, um ein zu starkes Auf und Ab zu verhindern
+    // Überprüfe auf Überlappung
+    if (p.x > silhouetteX && p.x < silhouetteX + silhouetteWidth &&
+        p.y > silhouetteY && p.y < silhouetteY + silhouetteHeight) {
+      collisionDetected = true;
+      break; // Wir haben die erste Überlappung gefunden
+    }
+  }
 
-    // Begrenzung der vertikalen Bewegung, falls gewünscht
-    if (p.y < 0) {
-       p.y = 0;
-      p.yVelocity *= -0.8; // Abprallen oder Umkehren
-     } else if (p.y > height) {
-      p.y = height;
-       p.yVelocity *= -0.8; // Abprallen oder Umkehren
-     }
+  // Wenn die erste Kollision erkannt wurde
+  if (collisionDetected && collisionTime === -1) {
+    collisionTime = millis(); // Speichere den Zeitpunkt der Kollision
+  }
 
-    if (p.x > width + p.size / 2) {
-      p.x = -p.size / 2;
+  // Berechne die aktuelle Farbe basierend auf der verstrichenen Zeit
+  if (collisionTime !== -1) {
+    let elapsedTime = millis() - collisionTime;
+    let normalizedTime = constrain(elapsedTime / transitionDuration, 0, 1); // Wert zwischen 0 und 1
+
+    if (normalizedTime < 0.5) {
+      // Erste Hälfte der Zeit: von Schwarz zu Grau
+      silhouetteColor = lerp(0, midColor, normalizedTime * 2); // *2, da wir nur die halbe Zeit nutzen
+    } else {
+      // Zweite Hälfte der Zeit: von Grau zu Hellgrau
+      silhouetteColor = lerp(midColor, targetColor, (normalizedTime - 0.5) * 2); // *(normalizedTime - 0.5) und dann *2
+    }
+  }
+
+  // Aktiviere die Umrandung für die Partikel
+  stroke(0);
+  strokeWeight(6);
+
+  // Zeichne die Partikel über der Silhouette
+  for (let i = 0; i < particles.length; i++) {
+    let p = particles[i];
+    stroke(p.y / 10, p.alpha);
+    line(p.x, p.y, p.x + lineLength, p.y);
+
+    p.x += p.speed + noise(p.x * 0.1, frameCount * 0.01) * 0.5;
+    p.yVelocity += random(-turbulenceFactor, turbulenceFactor);
+    p.y += p.yVelocity;
+    p.yVelocity *= 0.85;
+
+    if (p.x > width + lineLength / 2) {
+      p.x = -lineLength / 2;
     }
   }
 }
