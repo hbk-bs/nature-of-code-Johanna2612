@@ -4,19 +4,7 @@
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>index</title>
-	<style>
-		/* Basic styles for readability */
-		body {
-			font-family: sans-serif;
-			max-width: 800px;
-			margin: 2em auto;
-			padding: 0 1em;
-			line-height: 1.6;
-		}
-		img { max-width: 100%; height: auto; }
-		pre { background-color: #f4f4f4; padding: 1em; overflow-x: auto; }
-		code { font-family: monospace; }
-	</style>
+	<link rel="stylesheet" href="style.css">
 </head>
 <body>
 	<!--
@@ -25,31 +13,26 @@ if you use https://marketplace.cursorapi.com/items?itemName=fmoronzirfas.markdow
 It will be included into your html file
 Just make sure to keep a line break between the markdown tags and the style/script tags
 -->
-<style>
-html,
-body {
-height: 100%;
-}
 
-body {
-display: flex;
-flex-direction: column;
-justify-content: center;
-align-items: center;
-}
-main {
-height: 100%;
-display: flex;
-justify-content: center;
-flex-direction: column;
-align-items: flex-end;
-}
-</style>
-<h1>Seenebel </h1>
+<header><h1>Nature of Codes </h1></header>
+<h3>Ein Projekt zur Amrum Exkursion 2025</h3>
+<p>Auf der Exkursion nach Amrum haben wir uns mit der Natürlichkeit von Code befasst und waren auf der Suche nach natürlichen Phänomenen, die in p5js übersetzt werden können. Aus den gesammelten Beobachtungen und Inspirationen sollten dann kleine Projekte entstehen. Um unsere Ideen in Code umzusetzen, arbeiteten wir mit der KI Gemini 2.0.</p>
+</p>
+<h3>Ideenfindung</h3>
+<p>Während der Exkursion habe ich viel fotografiert und gefilmt und hatte gleich mehrere Ideen für das Projekt. Zum Einen haben mich die vielen Dünen fasziniert, die sich im Wind bewegen. Zum Anderen haben wir mystischen Seenebel gesehen, der den ganzen Strand verschluckt hat. Da die Idee mit den Dünen und dem Wind schon andere aufgreifen wollten, widmete ich mich dem Seenebel.   </p>
+<div class="image-row">
+  <img src="IMG_9180.jpg" alt="">
+  <img src="IMG_3A8F5EC34D49-1.jpeg" alt="">
+  <img src="IMG_2A21CCBB2E7F-1.jpeg" alt="">
+</div>
+<p>
+<h3>Der Code</h3>
+Um die Idee mit dem Seenebel umzusetzen, habe ich mich in erster Linie um die Hauptmerkmale von Nebel gekümmert: Er ist transparent, er hat eine gewisse Dichte, er bewegt sich und hat verschiedene Ebenen. Ich suchte im Internet nach verschiedenen Darstellungsweisen und fand das Dither- Prinzip, welches Bilder in Punkte übersetzt. Das gleiche versuchte ich mit meinem Code: Ich teilte die Canvas zuerst in drei horzontale Schichten und sorgte dann dafür, dass die Dichte der Punkte mit jeder höheren Schicht zunahm. Dies verband ich mit der Geschwindigkeit der Partikel. Die Partikel aus der unteren Schicht bewegen sich langsamer, die Partikel aus der oberen schneller. Dadurch entstand der Eindruck von Tiefe und Bewegung im Nebel. Ich überarbeitete den Code immer wieder und veränderte die Variablen der Geschwindigkeit, Farbe, Transparent und Größe der Punkte. Das führte mich weg von dem Dither-Prinzip und sorgte für eine realistischere Darstellung. Ich fügte zum Schluss noch einen schwarzen Kreis hinzu, der bei der Kollision mit den Nebel- Partikeln einen Farbverlauf durchläuft und dann verschwimmt, so als wenn der Nebel ihn verschluckt. Über diese Ergänzung lässt sich streiten, da es von der natürlichen Darstellung von Nebel vielleicht ablenkt, jedoch werden dadurch die Eigenschaften nochmal deutlicher. </p>
+
 <main>
 <div id="sketch"></div>
 <script src="lib/p5.min.js"></script>
-<script src="index.js"></script>
+<script src="seenebel/seenebel.js"></script>
 </main>
 
 </body>
